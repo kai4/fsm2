@@ -6,26 +6,29 @@ import java.util.Map;
 import utils.Arith;
 
 public class C45<E> {
-	private Double infoD = 0d;
-	private Map<E, Double> infoA_D;
-	private Double GainA = 0d;
-	private Double SplitInfoA_D = 0d;
+	private Double InfoD = 0d;
+	private Map<E, Double> InfoA_D;
+	private Map<E, Double> GainA;
+	private Map<E, Double> SplitInfoA_D;
 	private Double GainRatioA = 0d;
 
 	
 	private E[][] data;
-	private E[] attributes;
+	private E[] attrs;
 	private E model;
 
-	public C45(E[][] data, E[] attributes) {
+	public C45(E[][] data, E[] attrs) {
 		this.data = data;
-		this.attributes = attributes;
-		infoA_D = new HashMap<E, Double>();
+		this.attrs = attrs;
+		InfoA_D = new HashMap<E, Double>();
+		GainA = new HashMap<E, Double>();
+		SplitInfoA_D = new HashMap<E, Double>();
 	}
 
 	public void calculate() {
 		infoD();
 		infoDj();
+		gainA();
 	}
 	
 	
@@ -46,17 +49,17 @@ public class C45<E> {
 		
 		Double dataCount = (double) data.length;
 		for (Integer value : dataMap.values()) {
-			double d = Arith.div(Double.valueOf(value), dataCount);
-			this.infoD = Arith.add(this.infoD, Arith.mul(d, -log(d, 2d)));
+			this.InfoD += value/dataCount*(-log(value/dataCount, 2d));
 		}
+		InfoD = Arith.round(InfoD, 3);
 	}
 	
 	public void infoDj() {
-		Map<E, Map<E, Integer>> dataMap = new HashMap<E, Map<E, Integer>>();
 		int rowNum = data.length;
 		int columNum = data[0].length;
 		Double dataCount = (double) data.length;
-		for (int i = 0; i < columNum; i ++) {
+		for (int i = 0; i < columNum - 1; i ++) {
+			Map<E, Map<E, Integer>> dataMap = new HashMap<E, Map<E, Integer>>();
 			for (int j = 0; j < rowNum; j ++) {
 				E e = data[j][i];
 				Map<E, Integer> modelMap = dataMap.get(e);
@@ -73,33 +76,51 @@ public class C45<E> {
 				}
 			}
 			
+			Double infoDj = 0d;
 			for (E m : dataMap.keySet()) {
+				Double count = 0d;
+				Double infoJ = 0d;
 				Map<E, Integer> model = dataMap.get(m);
-				Integer count = 0;
-				Double infoDj = 0d;
+				
 				for (Integer value : model.values()) {
 					count += value;
 				}
 				
 				for (Integer value : model.values()) {
-					double d = Arith.div(value, count);
-					infoDj = Arith.add(infoDj, Arith.mul(Arith.div(count, dataCount),Arith.mul(d, -log(d, 2d))));
+					Double d = Double.valueOf(value)/count;
+					infoJ += -d * log(d, 2d);
 				}
-				infoA_D.put(m, infoDj);
+				infoDj += count / dataCount * infoJ;
 			}
+			InfoA_D.put(attrs[i], Arith.round(infoDj, 3));
 		}
+	}
+	
+	public void gainA() {
+		for (int i = 0; i < attrs.length - 1; i ++) {
+			E e = attrs[i];
+			GainA.put(e, Arith.round(InfoD - InfoA_D.get(e), 3));
+		}
+	}
+	
+	public void splitInfo() {
+		
 	}
 	
 	
 	private static double log(Double value, Double base) {
 		return Arith.div(Math.log(value), Math.log(base), 3);
 	}
-	
+
 	public Double getInfoD() {
-		return Arith.round(infoD, 3);
+		return InfoD;
 	}
 
 	public Map<E, Double> getInfoA_D() {
-		return infoA_D;
+		return InfoA_D;
+	}
+
+	public Map<E, Double> getGainA() {
+		return GainA;
 	}
 }
