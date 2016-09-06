@@ -1,6 +1,6 @@
 package tree;
 
-import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -30,5 +30,10 @@ public class TestC45 {
 		C45<String> c = new C45<String>(data, s);
 		c.calculate();
 		System.out.println(c.getInfoD());
+		
+		Map<String, Double> infoA_D = c.getInfoA_D();
+		for (String key: infoA_D.keySet()) {
+			System.out.println(key + ": " + infoA_D.get(key));
+		}
 	}
 }

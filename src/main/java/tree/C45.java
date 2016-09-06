@@ -1,15 +1,13 @@
 package tree;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import utils.Arith;
 
 public class C45<E> {
 	private Double infoD = 0d;
-	private Double infoA_D = 0d;
+	private Map<E, Double> infoA_D;
 	private Double GainA = 0d;
 	private Double SplitInfoA_D = 0d;
 	private Double GainRatioA = 0d;
@@ -17,51 +15,79 @@ public class C45<E> {
 	
 	private E[][] data;
 	private E[] attributes;
-
+	private E model;
 
 	public C45(E[][] data, E[] attributes) {
 		this.data = data;
 		this.attributes = attributes;
+		infoA_D = new HashMap<E, Double>();
 	}
 
 	public void calculate() {
 		infoD();
+		infoDj();
 	}
 	
 	
 	public void infoD() {
-		Map<E, Map<E, Double>> dataMap = new HashMap<E, Map<E, Double>>();
-		for (int i = 0; i < data.length; i++) {
-			for (int j = 0; j < data[i].length; j++) {
-				E attribute = attributes[j];
-				Map<E, Double> attr = dataMap.get(attribute);
-				if (attr == null) {
-					attr = new HashMap<E, Double>();
-					dataMap.put(attribute, attr);
-				}
-
-				E e = data[i][j];
-				Double n = attr.get(e);
-				if (n == null) {
-					attr.put(e, 1d);
-				} else {
-					attr.put(e, n + 1);
-				}
+		Map<E, Integer> dataMap = new HashMap<E, Integer>();
+		int rowNum = data.length;
+		int columNum = data[0].length;
+		for (int i = 0; i < rowNum; i++) {
+			E e = data[i][columNum - 1];
+			Integer d = dataMap.get(e);
+			if (d == null) {
+				dataMap.put(e, 1);
+			} else {
+				dataMap.put(e, d + 1);
 			}
 		}
 
 		
 		Double dataCount = (double) data.length;
-		E model = attributes[attributes.length - 1];
-		Map<E, Double> modelClass = dataMap.get(model);
-		for (Double value : modelClass.values()) {
-			double d = Arith.div(value, dataCount, 3);
+		for (Integer value : dataMap.values()) {
+			double d = Arith.div(Double.valueOf(value), dataCount);
 			this.infoD = Arith.add(this.infoD, Arith.mul(d, -log(d, 2d)));
 		}
 	}
 	
 	public void infoDj() {
-		
+		Map<E, Map<E, Integer>> dataMap = new HashMap<E, Map<E, Integer>>();
+		int rowNum = data.length;
+		int columNum = data[0].length;
+		Double dataCount = (double) data.length;
+		for (int i = 0; i < columNum; i ++) {
+			for (int j = 0; j < rowNum; j ++) {
+				E e = data[j][i];
+				Map<E, Integer> modelMap = dataMap.get(e);
+				if (modelMap == null) {
+					modelMap = new HashMap<E, Integer>();
+					dataMap.put(e, modelMap);
+				}
+				E m = data[j][columNum - 1];
+				Integer d = modelMap.get(m);
+				if (d == null) {
+					modelMap.put(m, 1);
+				} else {
+					modelMap.put(m, d + 1);
+				}
+			}
+			
+			for (E m : dataMap.keySet()) {
+				Map<E, Integer> model = dataMap.get(m);
+				Integer count = 0;
+				Double infoDj = 0d;
+				for (Integer value : model.values()) {
+					count += value;
+				}
+				
+				for (Integer value : model.values()) {
+					double d = Arith.div(value, count);
+					infoDj = Arith.add(infoDj, Arith.mul(Arith.div(count, dataCount),Arith.mul(d, -log(d, 2d))));
+				}
+				infoA_D.put(m, infoDj);
+			}
+		}
 	}
 	
 	
@@ -71,5 +97,9 @@ public class C45<E> {
 	
 	public Double getInfoD() {
 		return Arith.round(infoD, 3);
+	}
+
+	public Map<E, Double> getInfoA_D() {
+		return infoA_D;
 	}
 }
