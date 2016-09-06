@@ -12,10 +12,8 @@ public class C45<T, E> {
 	private Map<T, Double> SplitInfoA_D;
 	private Map<T, Double> IGR;
 
-	
 	private E[][] data;
 	private T[] attrs;
-	private E model;
 
 	public C45(E[][] data, T[] attrs) {
 		this.data = data;
