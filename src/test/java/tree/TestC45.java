@@ -4,6 +4,8 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import c45.C45;
+
 public class TestC45 {
 
 	public String[][] data = { { "晴", "炎热", "高", "弱", "否" }, { "晴", "炎热", "高", "强", "否" }, { "阴", "炎热", "高", "弱", "是" },
